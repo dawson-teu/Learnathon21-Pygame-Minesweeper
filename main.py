@@ -42,18 +42,54 @@ def setup():
     return mines_setup, mine_count_setup, is_uncovered_setup, is_flagged_setup
 
 
+def check_win(mines_in, is_uncovered_in, width, height):
+    for i in range(height):
+        for j in range(width):
+            if not is_uncovered_in[i][j] and not mines_in[i][j]:
+                return False
+    return True
+
+
 def start_game():
     mines, mine_count, is_uncovered, is_flagged = setup()
 
     is_game_over = False
     while True:
+        if check_win(mines, is_uncovered, GRID_WIDTH, GRID_HEIGHT):
+            is_game_over = True
+            pygame.draw.rect(screen, (0, 153, 31), (75, 150, 450, 300))
+            screen.blit(pygame.font.SysFont('sans-serif', 150).render('YOU', False, (255, 255, 255)), (180, 200))
+            screen.blit(pygame.font.SysFont('sans-serif', 150).render('WIN!', False, (255, 255, 255)), (180, 300))
+            pygame.display.flip()
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONDOWN:
                 x_pos, y_pos = event.pos[0] // CELL_SIZE, event.pos[1] // CELL_SIZE
                 if event.button == 1 and not is_flagged[y_pos][x_pos]:
                     if mines[y_pos][x_pos]:
-                        print('GAME OVER')
-                        return
+                        screen.blit(background, (0, 0))
+                        for i in range(GRID_HEIGHT):
+                            for j in range(GRID_WIDTH):
+                                if mines[i][j]:
+                                    pygame.draw.rect(screen, (255, 168, 54),
+                                                     (j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+                                    pygame.draw.rect(screen, (0, 0, 0), (j * CELL_SIZE + 15, i * CELL_SIZE + 15, CELL_SIZE - 30, CELL_SIZE - 30))
+                                else:
+                                    if mine_count[i][j] > 0:
+                                        txt_w, txt_h = text.size(str(mine_count[i][j]))
+                                        text_pos = j * CELL_SIZE + CELL_SIZE // 2 - txt_w // 2, i * CELL_SIZE + CELL_SIZE // 2 - txt_h // 2
+                                        screen.blit(text.render(str(mine_count[i][j]), False, num_color[mine_count[i][j]]),
+                                                    text_pos)
+                                    if is_flagged[i][j]:
+                                        pygame.draw.rect(screen, (255, 50, 50),
+                                                         (j * CELL_SIZE + 10, i * CELL_SIZE + 10, 55, 30))
+                                        pygame.draw.rect(screen, (255, 50, 50),
+                                                         (j * CELL_SIZE + 10, i * CELL_SIZE + 40, 10, 30))
+                        screen.blit(grid_lines, (0, 0))
+                        pygame.draw.rect(screen, (255, 25, 25), (75, 150, 450, 300))
+                        screen.blit(pygame.font.SysFont('sans-serif', 150).render('GAME', False, (255, 255, 255)), (135, 200))
+                        screen.blit(pygame.font.SysFont('sans-serif', 150).render('OVER!', False, (255, 255, 255)), (135, 300))
+                        pygame.display.flip()
+                        is_game_over = True
                     elif mine_count[y_pos][x_pos] > 0:
                         is_uncovered[y_pos][x_pos] = True
                     else:
